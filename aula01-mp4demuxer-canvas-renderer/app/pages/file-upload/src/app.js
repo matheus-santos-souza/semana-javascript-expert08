@@ -4,11 +4,13 @@ const view = new View()
 const clock = new Clock()
 let took = ''
 
-
 const worker = new Worker('./src/worker/worker.js', {
     type: 'module'
 })
 
+worker.onerror = (error) => {
+    console.error('Error Worker', error)
+}
 
 worker.onmessage = ({ data }) => {
     if (data.status !== 'done') {
@@ -19,7 +21,8 @@ worker.onmessage = ({ data }) => {
 }
 
 view.configureOnFileChange(file => {
-    worker.postMessage({ file })
+    const canvas = view.getCanvas()
+    worker.postMessage({ file, canvas }, [ canvas ])
     clock.start((time) => {
         took = time;
         view.updateElapsedTimes(`Process started ${time}`)
